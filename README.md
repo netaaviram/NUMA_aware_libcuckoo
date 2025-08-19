@@ -91,3 +91,12 @@ We now benchmark a real workload by setting --total-ops to a large value and swe
 
 --> Run bench_sweep.sh
 
+Make it executable and run:
+```bash
+chmod +x bench_sweep.sh
+./bench_sweep.sh
+```
+
+This produces sweep.csv.
+
+--> Plot it with plot_sweep.py:

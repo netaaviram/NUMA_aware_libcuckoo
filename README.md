@@ -62,3 +62,12 @@ On our reference system:
 • 4 sockets × 22 cores = 88 cores (no SMT)
 • NUMA nodes 0–3
 • Node 0 CPUs: 0–10,44–54; Node 1: 11–21,55–65; Node 2: 22–32,66–76; Node 3: 33–43,77–87
+
+
+3) Run the 7 NUMA placement tests
+
+These commands save (a) memory placement from /proc/<pid>/numa_maps and (b) the benchmark’s thread→CPU lines.
+
+We keep the small “initialization” workload used in the locality experiments you saw above (so --total-ops 0). For perf sweeps we’ll set --total-ops later.
+
+--> Run numactl_tests.sh

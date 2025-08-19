@@ -71,3 +71,10 @@ These commands save (a) memory placement from /proc/<pid>/numa_maps and (b) the 
 We keep the small “initialization” workload used in the locality experiments you saw above (so --total-ops 0). For perf sweeps we’ll set --total-ops later.
 
 --> Run numactl_tests.sh
+
+You should now have files like:
+```bash
+numa_test_*.txt
+threadmap_*.txt
+```
+

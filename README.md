@@ -85,4 +85,9 @@ python3 parse_and_plot_numa.py
 ```bash
 python python3 parse_and_plot_numa.py
 ```
+5) Perf sweep (throughput + counters) and plot
+
+We now benchmark a real workload by setting --total-ops to a large value and sweeping threads across sockets. We collect throughput from the benchmark JSON and perf counters via perf stat.
+
+--> Run bench_sweep.sh
 

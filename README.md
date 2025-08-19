@@ -1,4 +1,3 @@
-NUMA locality & performance with libcuckoo
 
 This repo reproduces our experiments showing that the libcuckoo benchmark’s scalability is bottlenecked by NUMA‑unaware placement. We:
 
@@ -16,22 +15,28 @@ Tested on Ubuntu‑like systems. The example machine is a 4‑socket Intel Xeon 
 
 0) Prerequisites
 # Build tools & perf
+'''bash
 sudo apt-get update
 sudo apt-get install -y build-essential cmake numactl linux-tools-common linux-tools-generic
-
+'''
 # Python plotting stack
+'''bash
 python3 -m pip install --user pandas matplotlib
+'''
 
-
-If you prefer conda: conda install -y pandas matplotlib.
+If you prefer conda: 
+'''bash
+conda install -y pandas matplotlib.
+'''
 
 1) Clone and build libcuckoo
+2) '''bash
 git clone https://github.com/efficient/libcuckoo.git
 cd libcuckoo
 mkdir -p build && cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release
 make -j
-
+'''
 
 The benchmark we use will be at:
 
@@ -39,17 +44,17 @@ libcuckoo/build/tests/universal-benchmark/universal_benchmark
 
 
 For convenience below, symlink it into a working dir:
-
+'''bash
 mkdir -p ~/numa-libcuckoo && cd ~/numa-libcuckoo
 ln -s ../libcuckoo/build/tests/universal-benchmark/universal_benchmark .
-
+'''
 2) Capture hardware & NUMA topology (one time)
 
 We record the CPU→NUMA mapping for later parsing:
-
+'''bash
 lscpu > lscpu.txt
 numactl --hardware > numactl_hardware.txt
-
+'''
 
 On our reference system:
 • 4 sockets × 22 cores = 88 cores (no SMT)

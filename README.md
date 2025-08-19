@@ -77,4 +77,12 @@ You should now have files like:
 numa_test_*.txt
 threadmap_*.txt
 ```
+--> Run parse_and_plot_numa.py:
+```bash
+python3 parse_and_plot_numa.py
+```
+-->Run python3 parse_and_plot_numa.py:
+```bash
+python python3 parse_and_plot_numa.py
+```
 

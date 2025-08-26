@@ -307,7 +307,7 @@ int main(int argc, char **argv) {
         // Step 3: partition keys across NUMA nodes using hash % num_nodes
         std::vector<std::vector<Gen<KEY>::storage_type>> keys_per_node(g_num_numa_nodes);
         for (size_t i = 0; i < total_keys; ++i) {
-                size_t node = std::hash<Gen<KEY>::storage_type>{}(all_keys[i]) % g_num_numa_nodes;
+                size_t node = i % g_num_numa_nodes;
                 keys_per_node[node].push_back(all_keys[i]);
         }
 
@@ -329,10 +329,10 @@ int main(int argc, char **argv) {
         for (size_t node = 0; node < g_num_numa_nodes; ++node) {
         const size_t num_keys = keys_per_node[node].size();
         const size_t threads_per_node = g_threads / g_num_numa_nodes;
-        const size_t keys_per_thread = num_keys / threads_per_node;
 
         for (size_t t = 0; t < threads_per_node; ++t) {
                 prefill_threads.emplace_back([&, node, t]() {
+                size_t keys_per_thread = keys_per_node[node].size() / threads_per_node;
                 // Pin thread to CPUs on its NUMA node
                 cpu_set_t cpuset;
                 CPU_ZERO(&cpuset);
@@ -370,12 +370,11 @@ for (auto &t : prefill_threads) { t.join(); }
     for (size_t node = 0; node < g_num_numa_nodes; ++node) {
         const size_t num_keys = keys_per_node[node].size();
         const size_t threads_per_node = g_threads / g_num_numa_nodes;
-        const size_t keys_per_thread = num_keys / threads_per_node;
-        const size_t ops_per_thread = total_ops / g_threads;
 
         for (size_t t = 0; t < threads_per_node; ++t) {
             mix_threads.emplace_back([&, node, t]() {
-
+                size_t keys_per_thread = keys_per_node[node].size() / threads_per_node;
+                size_t ops_per_thread = keys_per_node[node].size() / threads_per_node;
                 // Pin thread to CPUs on its NUMA node
                 cpu_set_t cpuset;
                 CPU_ZERO(&cpuset);

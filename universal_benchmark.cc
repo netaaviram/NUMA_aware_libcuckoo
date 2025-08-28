@@ -220,218 +220,142 @@ void mix(Table &tbl, const size_t num_ops, const std::array<Ops, 100> &op_mix,
 
 int main(int argc, char **argv) {
   try {
-    // Parse parameters and check them.
     parse_flags(argc, argv, description, args, arg_vars, arg_descriptions,
-                sizeof(args) / sizeof(const char *), nullptr, nullptr, nullptr,
-                0);
+                sizeof(args) / sizeof(const char *), nullptr, nullptr, nullptr, 0);
+
     check_percentage(g_read_percentage, "reads");
     check_percentage(g_insert_percentage, "inserts");
     check_percentage(g_erase_percentage, "erases");
     check_percentage(g_update_percentage, "updates");
     check_percentage(g_upsert_percentage, "upserts");
     check_percentage(g_prefill_percentage, "prefill");
+
     if (g_read_percentage + g_insert_percentage + g_erase_percentage +
-            g_update_percentage + g_upsert_percentage !=
-        100) {
+        g_update_percentage + g_upsert_percentage != 100) {
       throw std::runtime_error("Operation mix percentages must sum to 100\n");
     }
-    if (g_seed == 0) {
-      g_seed = std::random_device()();
+
+    if (g_seed == 0) g_seed = std::random_device()();
+
+    if (g_num_numa_nodes == 0) {
+      if (numa_available() == -1) throw std::runtime_error("NUMA is not available on this system.\n");
+      g_num_numa_nodes = numa_max_node() + 1;
+      fprintf(stderr, "Detected %zu NUMA nodes\n", g_num_numa_nodes);
     }
 
-    // Detect number of NUMA nodes if not specified
-        if (g_num_numa_nodes == 0) {
-        if (numa_available() == -1) {
-                throw std::runtime_error("NUMA is not available on this system.\n");
-        }
-        g_num_numa_nodes = numa_max_node() + 1;
-        fprintf(stderr, "Detected %zu NUMA nodes\n", g_num_numa_nodes);
-        }
-
-
     pcg64_oneseq_once_insecure base_rng(g_seed);
-
     const size_t initial_capacity = 1UL << g_initial_capacity;
     const size_t total_ops = initial_capacity * g_total_ops_percentage / 100;
 
-    // Pre-generate an operation mix based on our percentages.
     std::array<Ops, 100> op_mix;
     auto *op_mix_p = &op_mix[0];
-    for (size_t i = 0; i < g_read_percentage; ++i) {
-      *op_mix_p++ = READ;
-    }
-    for (size_t i = 0; i < g_insert_percentage; ++i) {
-      *op_mix_p++ = INSERT;
-    }
-    for (size_t i = 0; i < g_erase_percentage; ++i) {
-      *op_mix_p++ = ERASE;
-    }
-    for (size_t i = 0; i < g_update_percentage; ++i) {
-      *op_mix_p++ = UPDATE;
-    }
-    for (size_t i = 0; i < g_upsert_percentage; ++i) {
-      *op_mix_p++ = UPSERT;
-    }
+    for (size_t i = 0; i < g_read_percentage; ++i) *op_mix_p++ = READ;
+    for (size_t i = 0; i < g_insert_percentage; ++i) *op_mix_p++ = INSERT;
+    for (size_t i = 0; i < g_erase_percentage; ++i) *op_mix_p++ = ERASE;
+    for (size_t i = 0; i < g_update_percentage; ++i) *op_mix_p++ = UPDATE;
+    for (size_t i = 0; i < g_upsert_percentage; ++i) *op_mix_p++ = UPSERT;
     std::shuffle(op_mix.begin(), op_mix.end(), base_rng);
 
-    // Pre-generate all the keys we'd want to insert. In case the insert +
-    // upsert percentage is too low, lower bound by the table capacity.
-    std::cerr << "Generating keys\n";
     const size_t prefill_elems = initial_capacity * g_prefill_percentage / 100;
-    // We won't be running through `op_mix` more than ceil(total_ops / 100),
-    // so calculate that ceiling and multiply by the number of inserts and
-    // upserts to get an upper bound on how many elements we'll be
-    // inserting.
-    const size_t max_insert_ops =
-        (total_ops + 99) / 100 * (g_insert_percentage + g_upsert_percentage);
-    const size_t insert_keys =
-        std::max(initial_capacity, max_insert_ops) + prefill_elems;
-    // Round this quantity up to a power of 2, so that we can use an LCG to
-    // cycle over the array "randomly".
-    const size_t insert_keys_per_thread =
-        1UL << static_cast<size_t>(
-            ceil(log2((insert_keys + g_threads - 1) / g_threads)));
-    // Can't do this in parallel, because the random number generator is
-    // single-threaded.
-        // === New: partition keys across NUMA nodes ===
-        const size_t total_keys = insert_keys_per_thread * g_threads;
+    const size_t max_insert_ops = (total_ops + 99) / 100 * (g_insert_percentage + g_upsert_percentage);
+    const size_t insert_keys = std::max(initial_capacity, max_insert_ops) + prefill_elems;
+    const size_t insert_keys_per_thread = 1UL << static_cast<size_t>(ceil(log2((insert_keys + g_threads - 1) / g_threads)));
+    const size_t total_keys = insert_keys_per_thread * g_threads;
 
-        // Step 1: generate all random numbers in one big array
-        std::vector<uint64_t> all_nums(total_keys);
-        gen_nums(all_nums, base_rng);
+    std::vector<uint64_t> all_nums(total_keys);
+    gen_nums(all_nums, base_rng);
+    std::vector<Gen<KEY>::storage_type> all_keys(total_keys);
+    gen_keys(all_nums, all_keys);
 
-        // Step 2: convert them to keys
-        std::vector<Gen<KEY>::storage_type> all_keys(total_keys);
-        gen_keys(all_nums, all_keys);
+    std::vector<std::vector<Gen<KEY>::storage_type>> keys_per_node(g_num_numa_nodes);
+    for (size_t i = 0; i < total_keys; ++i) keys_per_node[i % g_num_numa_nodes].push_back(all_keys[i]);
 
-        // Step 3: partition keys across NUMA nodes using hash % num_nodes
-        std::vector<std::vector<Gen<KEY>::storage_type>> keys_per_node(g_num_numa_nodes);
-        for (size_t i = 0; i < total_keys; ++i) {
-                size_t node = i % g_num_numa_nodes;
-                keys_per_node[node].push_back(all_keys[i]);
-        }
-
-    for (size_t i = 0; i < g_num_numa_nodes; ++i) {
-        fprintf(stderr, "NUMA node %zu has %zu keys\n", i, keys_per_node[i].size());
-    }
-
-    // Create one table per NUMA node
+    for (size_t i = 0; i < g_num_numa_nodes; ++i)
+      fprintf(stderr, "NUMA node %zu has %zu keys\n", i, keys_per_node[i].size());
 
     std::vector<Table> shards;
-    shards.reserve(g_num_numa_nodes);
-    for (size_t i = 0; i < g_num_numa_nodes; ++i) {
-        shards.emplace_back(initial_capacity);
+    for (size_t i = 0; i < g_num_numa_nodes; ++i) shards.emplace_back(initial_capacity);
+
+    std::cerr << "Pre-filling table shards\n";
+    std::vector<std::thread> prefill_threads;
+    for (size_t node = 0; node < g_num_numa_nodes; ++node) {
+      const size_t num_keys = keys_per_node[node].size();
+      const size_t threads_per_node = (g_threads + g_num_numa_nodes - 1) / g_num_numa_nodes;
+      for (size_t t = 0; t < threads_per_node; ++t) {
+        prefill_threads.emplace_back([&, node, t, threads_per_node, num_keys]() {
+          size_t keys_per_thread = num_keys / threads_per_node;
+          cpu_set_t cpuset;
+          CPU_ZERO(&cpuset);
+          for (int cpu = 0; cpu < CPU_SETSIZE; ++cpu)
+            if (numa_node_of_cpu(cpu) == (int)node) CPU_SET(cpu, &cpuset);
+          pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+          int cpu = sched_getcpu();
+          fprintf(stderr, "[prefill n%zu t%zu] cpu=%d\n", node, t, cpu);
+          size_t begin = t * keys_per_thread;
+          size_t end = (t == threads_per_node - 1) ? num_keys : (t + 1) * keys_per_thread;
+          std::vector<Gen<KEY>::storage_type> local_keys(
+            keys_per_node[node].begin() + begin,
+            keys_per_node[node].begin() + end);
+          prefill(shards[node], local_keys, local_keys.size());
+        });
+      }
     }
+    for (auto &t : prefill_threads) t.join();
 
-        std::cerr << "Pre-filling table shards\n";
-        std::vector<std::thread> prefill_threads;
-
-        for (size_t node = 0; node < g_num_numa_nodes; ++node) {
-        const size_t num_keys = keys_per_node[node].size();
-        const size_t threads_per_node = g_threads / g_num_numa_nodes;
-
-        for (size_t t = 0; t < threads_per_node; ++t) {
-                prefill_threads.emplace_back([&, node, t]() {
-                size_t keys_per_thread = keys_per_node[node].size() / threads_per_node;
-                // Pin thread to CPUs on its NUMA node
-                cpu_set_t cpuset;
-                CPU_ZERO(&cpuset);
-                for (int cpu = 0; cpu < CPU_SETSIZE; ++cpu) {
-                    if (numa_node_of_cpu(cpu) == (int)node) {
-                    CPU_SET(cpu, &cpuset);
-                    }
-                }
-                pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
-
-                int cpu = sched_getcpu();
-                fprintf(stderr, "[prefill n%zu t%zu] cpu=%d\n", node, t, cpu);
-
-                size_t begin = t * keys_per_thread;
-                size_t end = (t == threads_per_node - 1) ? num_keys : (t + 1) * keys_per_thread;
-
-                std::vector<Gen<KEY>::storage_type> local_keys(
-                        keys_per_node[node].begin() + begin,
-                        keys_per_node[node].begin() + end);
-
-                prefill(shards[node], local_keys, local_keys.size());
-                });
-        }
-        }
-
-for (auto &t : prefill_threads) { t.join(); }
-
-    // Run the operation mix, timed
     std::vector<std::thread> mix_threads;
-    std::vector<std::vector<size_t>> samples;
-
+    std::vector<std::vector<size_t>> samples(g_threads);
     auto start_time = std::chrono::high_resolution_clock::now();
     std::cerr << "Running operations\n";
 
+    const size_t ops_per_thread_global = (total_ops + g_threads - 1) / g_threads;
+
     for (size_t node = 0; node < g_num_numa_nodes; ++node) {
-        const size_t num_keys = keys_per_node[node].size();
-        const size_t threads_per_node = g_threads / g_num_numa_nodes;
-
-        for (size_t t = 0; t < threads_per_node; ++t) {
-            mix_threads.emplace_back([&, node, t]() {
-                size_t keys_per_thread = keys_per_node[node].size() / threads_per_node;
-                size_t ops_per_thread = keys_per_node[node].size() / threads_per_node;
-                // Pin thread to CPUs on its NUMA node
-                cpu_set_t cpuset;
-                CPU_ZERO(&cpuset);
-                for (int cpu = 0; cpu < CPU_SETSIZE; ++cpu) {
-                    if (numa_node_of_cpu(cpu) == (int)node) {
-                        CPU_SET(cpu, &cpuset);
-                    }
-                }
-                pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
-
-                int cpu = sched_getcpu();
-                fprintf(stderr, "[mix    n%zu t%zu] cpu=%d\n", node, t, cpu);
-
-                size_t begin = t * keys_per_thread;
-                size_t end = (t == threads_per_node - 1) ? num_keys : (t + 1) * keys_per_thread;
-
-                std::vector<Gen<KEY>::storage_type> local_keys(
-                    keys_per_node[node].begin() + begin,
-                    keys_per_node[node].begin() + end);
-
-                samples.emplace_back();
-                mix(shards[node], ops_per_thread, op_mix, local_keys, local_keys.size(), samples.back());
-            });
-        }
+      const size_t num_keys = keys_per_node[node].size();
+      const size_t threads_per_node = (g_threads + g_num_numa_nodes - 1) / g_num_numa_nodes;
+      for (size_t t = 0; t < threads_per_node; ++t) {
+        mix_threads.emplace_back([&, node, t, threads_per_node, num_keys, ops_per_thread_global]() {
+          size_t keys_per_thread = num_keys / threads_per_node;
+          size_t ops_per_thread = ops_per_thread_global;
+          cpu_set_t cpuset;
+          CPU_ZERO(&cpuset);
+          for (int cpu = 0; cpu < CPU_SETSIZE; ++cpu)
+            if (numa_node_of_cpu(cpu) == (int)node) CPU_SET(cpu, &cpuset);
+          pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+          int cpu = sched_getcpu();
+          fprintf(stderr, "[mix    n%zu t%zu] cpu=%d\n", node, t, cpu);
+          size_t begin = t * keys_per_thread;
+          size_t end = (t == threads_per_node - 1) ? num_keys : (t + 1) * keys_per_thread;
+          std::vector<Gen<KEY>::storage_type> local_keys(
+            keys_per_node[node].begin() + begin,
+            keys_per_node[node].begin() + end);
+          size_t global_tid = node * threads_per_node + t;
+          if (global_tid >= g_threads) return;
+          mix(shards[node], ops_per_thread, op_mix, local_keys, local_keys.size(), samples[global_tid]);
+        });
+      }
     }
-
-    for (auto &t : mix_threads) { t.join(); }
+    for (auto &t : mix_threads) t.join();
 
     auto end_time = std::chrono::high_resolution_clock::now();
     double seconds_elapsed =
-        std::chrono::duration_cast<std::chrono::duration<double>>(end_time -
-                                                                  start_time)
-            .count();
-    // Print out args, preprocessor constants, and results in JSON format
+        std::chrono::duration_cast<std::chrono::duration<double>>(end_time - start_time).count();
+
     std::stringstream argstr;
     argstr << args[0] << " " << *arg_vars[0];
-    for (size_t i = 1; i < sizeof(args) / sizeof(args[0]); ++i) {
+    for (size_t i = 1; i < sizeof(args) / sizeof(args[0]); ++i)
       argstr << " " << args[i] << " " << *arg_vars[i];
-    }
-    // Average together the allocator samples from each thread. If
-    // TRACKING_ALLOCATOR is turned off, the samples should all be empty,
-    // and this list should end up empty.
+
     std::stringstream samplestr;
     samplestr << "[";
     const size_t total_samples = samples[0].size();
     for (size_t i = 0; i < total_samples; ++i) {
       size_t total = 0;
-      for (size_t j = 0; j < g_threads; ++j) {
-        total += samples.at(j).at(i);
-      }
-      size_t avg = total / g_threads;
-      samplestr << avg;
-      if (i < total_samples - 1) {
-        samplestr << ",";
-      }
+      for (size_t j = 0; j < g_threads; ++j) total += samples.at(j).at(i);
+      samplestr << (total / g_threads);
+      if (i < total_samples - 1) samplestr << ",";
     }
     samplestr << "]";
+
     const char *json_format = R"({
     "args": "%s",
     "key": "%s",
@@ -440,33 +364,17 @@ for (auto &t : prefill_threads) { t.join(); }
     "value_size": "%zu",
     "NUMA_table": "%s",
     "output": {
-        "total_ops": {
-            "name": "Total Operations",
-            "units": "count",
-            "value": %zu
-        },
-        "time_elapsed": {
-            "name": "Time Elapsed",
-            "units": "seconds",
-            "value": %.4f
-        },
-        "throughput": {
-            "name": "Throughput",
-            "units": "count/seconds",
-            "value": %.4f
-        },
-        "memory_samples": {
-            "name": "Memory Samples",
-            "units": "[bytes]",
-            "value": %s
-        }
+        "total_ops": {"name": "Total Operations", "units": "count", "value": %zu},
+        "time_elapsed": {"name": "Time Elapsed", "units": "seconds", "value": %.4f},
+        "throughput": {"name": "Throughput", "units": "count/seconds", "value": %.4f},
+        "memory_samples": {"name": "Memory Samples", "units": "[bytes]", "value": %s}
     }
-}
-)";
+})";
     printf(json_format, argstr.str().c_str(), XSTR(KEY), Gen<KEY>::key_size,
            XSTR(VALUE), Gen<VALUE>::value_size, TABLE, total_ops,
            seconds_elapsed, total_ops / seconds_elapsed,
            samplestr.str().c_str());
+
   } catch (const std::exception &e) {
     std::cerr << e.what();
     std::exit(1);

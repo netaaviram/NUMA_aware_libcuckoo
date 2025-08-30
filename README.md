@@ -44,6 +44,10 @@ The benchmark we use will be at:
 
 libcuckoo/build/tests/universal-benchmark/universal_benchmark
 
+For recompiling the benchmark: 
+```bash
+ g++ -std=c++17 -g -O0 -pthread     -I../../libcuckoo -I.. -I../../..     -I$HOME/numa_local/install/include     -L$HOME/numa_local/install/lib -Wl,-rpath=$HOME/numa_local/install/lib     -DLIBCUCKOO -DKEY=uint64_t -DVALUE=uint64_t     -DTABLE=LIBCUCKOO -DTABLE_TYPE=libcuckoo::cuckoohash_map     universal_benchmark.cc -o universal_benchmark -lnuma
+```
 
 For convenience below, symlink it into a working dir:
 ```bash

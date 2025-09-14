@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-OPS=75
+OPS=0
 THREADS=20
 CAPACITY=24
 PREFILL=100

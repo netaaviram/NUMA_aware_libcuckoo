@@ -33,7 +33,9 @@ conda install -y pandas matplotlib.
 
 1) Clone and build libcuckoo
 ```bash
-git clone https://github.com/efficient/libcuckoo.git
+wget https://github.com/efficient/libcuckoo/archive/refs/heads/master.zip
+unzip master.zip
+mv libcuckoo-master libcuckoo
 cd libcuckoo
 mkdir -p build && cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release

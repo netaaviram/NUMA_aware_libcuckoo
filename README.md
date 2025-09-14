@@ -112,7 +112,7 @@ This step measures scalability. We run a real workload (larger --total-ops) whil
 
 Run the sweep:
 ```bash
-mv ./NUMA_aware_libcuckoo/bench_sweep.sh
+mv ./NUMA_aware_libcuckoo/bench_sweep.sh ./
 chmod +x bench_sweep.sh
 ./bench_sweep.sh
 ```

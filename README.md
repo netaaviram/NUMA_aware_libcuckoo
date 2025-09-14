@@ -56,6 +56,7 @@ g++ -std=c++17 -O3 -pthread \
   -Wl,-rpath,"$HOME/numa_local/install/lib" \
   -lnuma
 ```
+We are using -lnuma flag to make sure linking against the NUMA library, which is required for memory placements. 
 
 The benchmark will be at:
 

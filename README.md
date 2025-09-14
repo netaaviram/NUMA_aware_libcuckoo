@@ -26,8 +26,11 @@ sudo apt-get install -y build-essential cmake numactl linux-tools-common linux-t
 ```bash
 python3 -m pip install --user pandas matplotlib
 ```
-1) Clone 
-1) Clone libcuckoo
+1) Clone NUMA_aware_libcuckoo project (this repo):
+   clone from:
+   https://github.com/netaaviram/NUMA_aware_libcuckoo.git
+
+2) Clone libcuckoo
 ```bash
 wget https://github.com/efficient/libcuckoo/archive/refs/heads/master.zip
 unzip master.zip
@@ -35,7 +38,7 @@ mv libcuckoo-master libcuckoo
 cd libcuckoo/tests/universal-benchmark
 ```
 
-2) Build libcuckoo
+3) Build libcuckoo
 ```bash
 g++ -std=c++17 -O3 -pthread \
   -I.. \
@@ -58,6 +61,10 @@ The benchmark will be at:
 
 libcuckoo/build/tests/universal_benchmark
 
+3) Replace the original benchmark file with the NUMA optimized benchmark file from NUMA_aware_libcuckoo
+```bash
+
+```
 3) Capture hardware & NUMA topology (one time)
 
 We record the CPU→NUMA mapping for later parsing:

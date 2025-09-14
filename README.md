@@ -43,8 +43,8 @@ cd libcuckoo/tests/universal-benchmark
 
 3) Replace the original benchmark file with the NUMA optimized benchmark file from NUMA_aware_libcuckoo
 ```bash
-mv universal_benchmark.cc ./universal_benchmark_backup.cc
-mv ../../../NUMA_aware_libcuckoo ./universal_benchmark.cc
+rm universal_benchmark.cc
+mv ../../../NUMA_aware_libcuckoo/universal_benchmark.cc ./
 ```
 * Now, the new optimized version of universal benchmark is saved as universal_benchmark.cc under libcuckoo/build/tests/universal_benchmark.cc
 

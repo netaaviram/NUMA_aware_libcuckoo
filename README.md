@@ -143,21 +143,3 @@ perf stat wraps the run and outputs counters in CSV; the script extracts:
 * counters from perf lines
 
 * writes a single line to sweep.csv
-
-6) How to cite the figures in your report
-
-Figure 1: numa_sweep_perf.png — throughput/IPC/cache‑miss/branch‑miss across configurations & threads.
-
-Figure 2: memory_vs_threads.png — normalized memory vs. thread placement across NUMA nodes.
-
-7) Notes & troubleshooting
-
-If perf says “not found”: sudo apt-get install linux-tools-$(uname -r)
-
-If jq is not installed, we do not use it (the scripts parse JSON with Python).
-
-If your machine has a different NUMA layout, the parser reads it from numactl --hardware, so no hard‑coding is required.
-
-For long runs, increase TOTAL_OPS and/or adjust THREADS_STEP.
-
-For exact reproduction of our “bind0 peaks at ~22 threads” observation, confirm your socket has 22 cores (see lscpu).

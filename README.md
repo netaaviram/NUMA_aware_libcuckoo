@@ -31,32 +31,37 @@ If you prefer conda:
 conda install -y pandas matplotlib.
 ```
 
-1) Clone and build libcuckoo
+1) Clone libcuckoo
 ```bash
 wget https://github.com/efficient/libcuckoo/archive/refs/heads/master.zip
 unzip master.zip
 mv libcuckoo-master libcuckoo
-cd libcuckoo
-mkdir -p build && cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release
-make -j
+cd libcuckoo/tests/universal-benchmark
 ```
 
-The benchmark we use will be at:
-
-libcuckoo/build/tests/universal-benchmark/universal_benchmark
-
-For recompiling the benchmark: 
+2) Build libcuckoo
 ```bash
- g++ -std=c++17 -g -O0 -pthread     -I../../libcuckoo -I.. -I../../..     -I$HOME/numa_local/install/include     -L$HOME/numa_local/install/lib -Wl,-rpath=$HOME/numa_local/install/lib     -DLIBCUCKOO -DKEY=uint64_t -DVALUE=uint64_t     -DTABLE=LIBCUCKOO -DTABLE_TYPE=libcuckoo::cuckoohash_map     universal_benchmark.cc -o universal_benchmark -lnuma
+g++ -std=c++17 -O3 -pthread \
+  -I.. \
+  -I../.. \
+  -I"$HOME/numa_local/install/include" \
+  -DLIBCUCKOO \
+  -DTABLE=LIBCUCKOO \
+  -DTABLE_TYPE=libcuckoo::cuckoohash_map \
+  -DKEY=uint64_t \
+  -DVALUE=uint64_t \
+  universal_benchmark.cc \
+  -o universal_benchmark \
+  -L"$HOME/numa_local/install/lib" \
+  -Wl,-rpath,"$HOME/numa_local/install/lib" \
+  -lnuma
 ```
 
-For convenience below, symlink it into a working dir:
-```bash
-mkdir -p ~/numa-libcuckoo && cd ~/numa-libcuckoo
-ln -s ../libcuckoo/build/tests/universal-benchmark/universal_benchmark .
-```
-2) Capture hardware & NUMA topology (one time)
+The benchmark will be at:
+
+libcuckoo/build/tests/universal_benchmark
+
+3) Capture hardware & NUMA topology (one time)
 
 We record the CPU→NUMA mapping for later parsing:
 ```bash

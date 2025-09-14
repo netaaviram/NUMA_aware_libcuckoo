@@ -14,6 +14,7 @@ Run a perf sweep (threads 1…N) across policies and plot throughput + perf coun
 Tested on Ubuntu‑like systems. The example machine is a 4‑socket Intel Xeon E5‑4669 v4 (Broadwell‑EX), 22 cores per socket, 4 NUMA nodes (0–3), SMT disabled.
 
 0) Prerequisites
+1) If you are running on an other system but the rack-mad-04 of TAU, you need to install prequisits: 
 # Build tools & perf
 
 ```bash
@@ -25,12 +26,7 @@ sudo apt-get install -y build-essential cmake numactl linux-tools-common linux-t
 ```bash
 python3 -m pip install --user pandas matplotlib
 ```
-
-If you prefer conda: 
-```bash
-conda install -y pandas matplotlib.
-```
-
+1) Clone 
 1) Clone libcuckoo
 ```bash
 wget https://github.com/efficient/libcuckoo/archive/refs/heads/master.zip

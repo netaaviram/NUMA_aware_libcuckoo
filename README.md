@@ -41,7 +41,14 @@ mv libcuckoo-master libcuckoo
 cd libcuckoo/tests/universal-benchmark
 ```
 
-3) Build libcuckoo
+3) Replace the original benchmark file with the NUMA optimized benchmark file from NUMA_aware_libcuckoo
+```bash
+mv universal_benchmark.cc ./universal_benchmark_backup.cc
+mv ../../../NUMA_aware_libcuckoo ./universal_benchmark.cc
+```
+* Now, the new optimized version of universal benchmark is saved as universal_benchmark.cc under libcuckoo/build/tests/universal_benchmark.cc
+
+3) Build and Compile libcuckoo
 ```bash
 g++ -std=c++17 -O3 -pthread \
   -I.. \
@@ -61,15 +68,6 @@ g++ -std=c++17 -O3 -pthread \
 We are using -lnuma flag to make sure linking against the NUMA library, which is required for memory placements. 
 
 The benchmark will be at:
-
-libcuckoo/build/tests/universal_benchmark.cc
-
-3) Replace the original benchmark file with the NUMA optimized benchmark file from NUMA_aware_libcuckoo
-```bash
-mv universal_benchmark.cc ./universal_benchmark_backup.cc
-mv ../../../NUMA_aware_libcuckoo ./universal_benchmark.cc
-```
-* Now, the new optimized version of universal benchmark is saved as universal_benchmark.cc under libcuckoo/build/tests/universal_benchmark.cc
 
 4) Capture hardware & NUMA topology (one time)
 

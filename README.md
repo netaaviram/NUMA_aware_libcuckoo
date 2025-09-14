@@ -26,25 +26,25 @@ sudo apt-get install -y build-essential cmake numactl linux-tools-common linux-t
 ```bash
 python3 -m pip install --user pandas matplotlib
 ```
-1) Clone NUMA_aware_libcuckoo project (this repo):
-```bash
-wget https://github.com/netaaviram/NUMA_aware_libcuckoo/archive/refs/heads/main.zip -O numa_libcuckoo.zip
-unzip numa_libcuckoo.zip
-mv NUMA_aware_libcuckoo-main NUMA_aware_libcuckoo
-```
 
-2) Clone libcuckoo
+1) Clone libcuckoo
 ```bash
 wget https://github.com/efficient/libcuckoo/archive/refs/heads/master.zip
 unzip master.zip
 mv libcuckoo-master libcuckoo
 cd libcuckoo/tests/universal-benchmark
 ```
+2) Clone NUMA_aware_libcuckoo project (this repo):
+```bash
+wget https://github.com/netaaviram/NUMA_aware_libcuckoo/archive/refs/heads/main.zip -O numa_libcuckoo.zip
+unzip numa_libcuckoo.zip
+mv NUMA_aware_libcuckoo-main NUMA_aware_libcuckoo
+```
 
 3) Replace the original benchmark file with the NUMA optimized benchmark file from NUMA_aware_libcuckoo
 ```bash
 rm universal_benchmark.cc
-mv ../../../NUMA_aware_libcuckoo/universal_benchmark.cc ./
+mv ./NUMA_aware_libcuckoo/universal_benchmark.cc ./
 ```
 * Now, the new optimized version of universal benchmark is saved as universal_benchmark.cc under libcuckoo/build/tests/universal_benchmark.cc
 
@@ -76,7 +76,6 @@ We record the CPU→NUMA mapping for later parsing:
 lscpu > lscpu.txt
 numactl --hardware > numactl_hardware.txt
 ```
-
 On the reference system:
 • 4 sockets × 22 cores = 88 cores (no SMT)
 • NUMA nodes 0–3
@@ -87,8 +86,13 @@ On the reference system:
 These commands save (a) memory placement from /proc/<pid>/numa_maps and (b) the benchmark’s thread→CPU lines.
 
 We keep the small “initialization” workload used in the locality experiments you saw above (so --total-ops 0). For perf sweeps we’ll set --total-ops later.
+Run:
 
---> Run numactl_tests.sh
+```bash
+mv ./NUMA_aware_libcuckoo/numactl_tests.sh ./
+chmod +x numactl_tests.sh
+./numactl_tests.sh
+```
 
 You should now have files like:
 ```bash

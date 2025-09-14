@@ -13,8 +13,8 @@ Run a perf sweep (threads 1…N) across policies and plot throughput + perf coun
 
 Tested on Ubuntu‑like systems. The example machine is a 4‑socket Intel Xeon E5‑4669 v4 (Broadwell‑EX), 22 cores per socket, 4 NUMA nodes (0–3), SMT disabled.
 
-0) Prerequisites
-1) If you are running on an other system but the rack-mad-04 of TAU, you need to install prequisits: 
+# 0) Prerequisites
+If you are running on an other system but the rack-mad-04 of TAU, you need to install prequisits: 
 # Build tools & perf
 
 ```bash
@@ -27,14 +27,14 @@ sudo apt-get install -y build-essential cmake numactl linux-tools-common linux-t
 python3 -m pip install --user pandas matplotlib
 ```
 
-1) Clone libcuckoo
+# 1) Clone libcuckoo
 ```bash
 wget https://github.com/efficient/libcuckoo/archive/refs/heads/master.zip
 unzip master.zip
 mv libcuckoo-master libcuckoo
 cd libcuckoo/tests/universal-benchmark
 ```
-2) Clone NUMA_aware_libcuckoo project (this repo):
+# 2) Clone NUMA_aware_libcuckoo project (this repo):
 ```bash
 wget https://github.com/netaaviram/NUMA_aware_libcuckoo/archive/refs/heads/main.zip -O numa_libcuckoo.zip
 unzip numa_libcuckoo.zip
@@ -48,7 +48,7 @@ mv ./NUMA_aware_libcuckoo/universal_benchmark.cc ./
 ```
 * Now, the new optimized version of universal benchmark is saved as universal_benchmark.cc under libcuckoo/build/tests/universal_benchmark.cc
 
-3) Build and Compile libcuckoo
+# 3) Build and Compile libcuckoo
 ```bash
 g++ -std=c++17 -O3 -pthread \
   -I.. \
@@ -67,9 +67,7 @@ g++ -std=c++17 -O3 -pthread \
 ```
 We are using -lnuma flag to make sure linking against the NUMA library, which is required for memory placements. 
 
-The benchmark will be at:
-
-4) Capture hardware & NUMA topology (one time)
+# 4) Capture hardware & NUMA topology (one time)
 
 We record the CPU→NUMA mapping for later parsing:
 ```bash
@@ -81,52 +79,70 @@ On the reference system:
 • NUMA nodes 0–3
 • Node 0 CPUs: 0–10,44–54; Node 1: 11–21,55–65; Node 2: 22–32,66–76; Node 3: 33–43,77–87
 
-5) Run the 7 NUMA placement tests
+# 5) Run the 7 NUMA placement tests
 
-These commands save (a) memory placement from /proc/<pid>/numa_maps and (b) the benchmark’s thread→CPU lines.
+This step measures where memory pages are allocated and which NUMA node each thread runs on under different placement policies.
+We are not interested in throughput here, only in placement behavior.
 
-We keep the small “initialization” workload used in the locality experiments you saw above (so --total-ops 0). For perf sweeps we’ll set --total-ops later.
-Run:
+That’s why we run the benchmark with --total-ops 0:
 
+* The benchmark still allocates memory and spawns threads, but it doesn’t perform real operations, allowing us to capture a clean snapshot of memory/thread placement without workload noise.
+
+Run: 
 ```bash
 mv ./NUMA_aware_libcuckoo/numactl_tests.sh ./
 chmod +x numactl_tests.sh
 ./numactl_tests.sh
 ```
+This will generate:
+numa_test_*.txt — parsed from /proc/$pid/numa_maps, showing memory pages per NUMA node.
+threadmap_*.txt — benchmark logs showing thread→CPU mapping.
 
-You should now have files like:
-```bash
-numa_test_*.txt
-threadmap_*.txt
-```
---> Run parse_and_plot_numa.py:
-```bash
-python3 parse_and_plot_numa.py
-```
--->Run python3 parse_and_plot_numa.py:
-```bash
-python python3 parse_and_plot_numa.py
-```
-5) Perf sweep (throughput + counters) and plot
+Later, parse_and_plot_numa.py processes these files to produce Figure 2 in the final report.
 
-We now benchmark a real workload by setting --total-ops to a large value and sweeping threads across sockets. We collect throughput from the benchmark JSON and perf counters via perf stat.
+# 6) Perf sweep (throughput + counters) and plot
 
---> Run bench_sweep.sh
+This step measures scalability. We run a real workload (larger --total-ops) while sweeping the thread count across sockets and record:
 
-Make it executable and run:
+* the benchmark’s throughput (from its JSON),
+
+* Linux perf stat hardware counters (cycles, instructions, cache/branch stats).
+
+* The result is a CSV you can plot to get Figure 1 in the final report (throughput vs. threads, with counters).
+
+Run the sweep:
 ```bash
+mv ./NUMA_aware_libcuckoo/bench_sweep.sh
 chmod +x bench_sweep.sh
 ./bench_sweep.sh
 ```
+This creates a sweep.csv with the following columns:
+config,threads,throughput,cycles,instructions,cache_references,cache_misses,branches,branch_misses
 
-This produces sweep.csv.
-
---> Plot it with plot_sweep.py:
+Then plot using:
 ```bash
 python plot_sweep.py
 ```
+What the script does (briefly):
 
-You now have numa_sweep_perf.png—this is “Figure 1” in the write‑up.
+A. Defines a set of NUMA policies (CONFIGS) such as full bind per node, cross-CPU/memory binds, interleave, and default.
+
+B. Sweeps threads = 1, 1+STEP, …, THREADS_MAX for each policy.
+
+C. For each run it executes:
+```bash
+[numactl …] ./universal_benchmark \
+    --reads 100 --initial-capacity 24 --prefill 100 \
+    --total-ops $TOTAL_OPS --num-threads $T --seed $SEED
+```
+
+perf stat wraps the run and outputs counters in CSV; the script extracts:
+
+* throughput from the benchmark JSON
+
+* counters from perf lines
+
+* writes a single line to sweep.csv
 
 6) How to cite the figures in your report
 

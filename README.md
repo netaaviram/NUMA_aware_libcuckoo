@@ -53,6 +53,8 @@ g++ -std=c++17 -O3 -pthread \
   -Wl,-rpath,"$HOME/numa_local/install/lib" \
   -lnuma
 ```
+We are using -lnuma flag to make sure linking against the NUMA library, which is required for memory placements.
+
 # 3) Run a sweep over thread count to measure and obtain performance different memory placement configurations: 
 This step is the scalability profiling I ran to understand and detect bottlenecks in libcuckoo. We run a real workload (--total-ops != 0) while sweeping the thread count across sockets and record:
 
@@ -126,7 +128,6 @@ g++ -std=c++17 -O3 -pthread \
   -Wl,-rpath,"$HOME/numa_local/install/lib" \
   -lnuma
 ```
-We are using -lnuma flag to make sure linking against the NUMA library, which is required for memory placements. 
 
 # 7) Capture hardware & NUMA topology (one time)
 

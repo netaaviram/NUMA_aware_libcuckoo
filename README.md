@@ -188,27 +188,27 @@ Step-by-Step: Rebuild Guide
 
 Set up NUMA (libnuma) from source
 
-# 1.1 Create a clean install directory
+1.1 Create a clean install directory
 ```bash
 mkdir -p $HOME/numa_local/build
 cd       $HOME/numa_local/build
 ```
 
-# 1.2 Download latest libnuma release (as of Aug 2025)
+1.2 Download latest libnuma release (as of Aug 2025)
 ```bash
 wget https://github.com/numactl/numactl/releases/download/v2.0.18/numactl-2.0.18.tar.gz
 ```
 
-# 1.3 Extract
+1.3 Extract
 ```bash
 tar xf numactl-2.0.18.tar.gz
 cd numactl-2.0.18
 ```
-# 1.4 Configure with local prefix
+1.4 Configure with local prefix
 ```bash
 ./configure --prefix=$HOME/numa_local/install
 ```
-# 1.5 Compile and install
+1.5 Compile and install
 ```bash
 make -j$(nproc)
 make install

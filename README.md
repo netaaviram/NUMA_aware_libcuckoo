@@ -261,3 +261,54 @@ A5. Runtime Expectations
 * NUMA placement tests (numactl_tests.sh) run quickly (seconds per config).
 
 * Perf sweeps (bench_sweep.sh) are much heavier: for 7 configs × ~44 thread counts, expect hours of runtime on a 4-socket 88-core system. Plan accordingly.
+
+
+A6. What the NUMA debug prints mean (optimized benchmark)
+
+I added a few stderr debug prints to the optimized universal_benchmark to make NUMA behavior visible and easy to validate. They appear before the JSON (which stays on stdout so scripts can parse it cleanly). You can always capture them separately via 2> debug.log.
+
+Sample output (stderr):
+
+```bash
+Detected 4 NUMA nodes
+NUMA node 0 has 8388608 keys
+NUMA node 1 has 8388608 keys
+NUMA node 2 has 8388608 keys
+NUMA node 3 has 8388608 keys
+Pre-filling table shards
+[prefill n3 t0] cpu=77
+[prefill n1 t0] cpu=11
+[prefill n0 t0] cpu=0
+[prefill n2 t0] cpu=67
+Running operations
+[mix    n0 t0] cpu=44
+[mix    n1 t0] cpu=11
+[mix    n3 t0] cpu=78
+[mix    n2 t0] cpu=66
+```
+
+What each line indicates:
+
+Detected N NUMA nodes
+
+If --numa-nodes isn’t provided, we auto-detect with numa_max_node()+1. This is the number of shards we build and the number of node-local CPU sets we’ll target.
+
+NUMA node i has X keys
+
+We partition the global key set evenly across nodes (round-robin). This ensures each shard (per-node table) is prefilled and exercised using its own local key subset, minimizing cross-node traffic by design.
+
+Pre-filling table shards
+
+We create per-node tables and insert each node’s keys on threads pinned to that node’s CPUs. This warms up placement so pages back the shard on the correct NUMA node (first-touch).
+
+[prefill n<i> t<j>] cpu=<k>
+
+During prefill, thread j for node i is bound to logical CPU k (reported by sched_getcpu()). CPUs listed here should belong to node i. Quick check: compare with numactl --hardware.
+
+Running operations
+
+Start of the measured phase. Work is divided per node and per thread, mirroring prefill placement.
+
+[mix n<i> t<j>] cpu=<k>
+
+During the hot loop, the mix thread for node i is still running on a CPU from node i. Seeing CPUs that don’t belong to node i suggests affinity issues.

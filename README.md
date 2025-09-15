@@ -71,9 +71,9 @@ chmod +x numactl_tests.sh
 ```
 This will generate:
 
-numa_test_*.txt — parsed from /proc/$pid/numa_maps, showing memory pages per NUMA node.
+numa_test_*.txt - parsed from /proc/$pid/numa_maps, showing memory pages per NUMA node.
 
-threadmap_*.txt — benchmark logs showing thread→CPU mapping.
+threadmap_*.txt - benchmark logs showing thread→CPU mapping.
 
 Later, parse_and_plot_numa.py processes these files to produce Figure 2 in the final report.
 
@@ -125,7 +125,7 @@ wget https://github.com/netaaviram/NUMA_aware_libcuckoo/archive/refs/heads/main.
 unzip numa_libcuckoo.zip
 mv NUMA_aware_libcuckoo-main NUMA_aware_libcuckoo
 ```
-# 6)Capture hardware & NUMA topology (one time)
+# 6) Capture hardware & NUMA topology (one time)
 We record the CPU→NUMA mapping for later parsing:
 ```bash
 lscpu > lscpu.txt
@@ -163,7 +163,8 @@ g++ -std=c++17 -O3 -pthread \
 ```
 
 # 9) Perf sweep (throughput + counters) and plot
-We now run the same experiment as for the original benchmark, but this time for comparison with the optimized libcuckoo benchmark:
+We now run the same experiment as for the original benchmark, but this time for comparison with the optimized libcuckoo benchmark.
+
 Run:
 ```bash
 ./bench_sweep.sh

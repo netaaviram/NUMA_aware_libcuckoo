@@ -1,17 +1,18 @@
+# MUMA-aware optimization of libcuckoo: analyzing scalability bottlenecks for improved performance through thread and memory placement
 
-This repo reproduces our experiments showing that the libcuckoo benchmark’s scalability is bottlenecked by NUMA‑unaware placement. We:
+This repo reproduces my experiments showing that the libcuckoo benchmark’s scalability is bottlenecked by NUMA‑unaware placement. I:
 
-Build libcuckoo’s universal_benchmark in Release mode.
+* Build libcuckoo’s universal_benchmark in Release mode.
 
-Run 7 configurations using numactl to control CPU & memory placement.
+* Run 7 configurations using numactl to control CPU & memory placement.
 
-Capture memory page placement (/proc/<pid>/numa_maps) and thread→CPU mapping (benchmark stdout).
+* Capture memory page placement (/proc/<pid>/numa_maps) and thread→CPU mapping (benchmark stdout).
 
-Convert the logs to CSVs and plot a normalized “memory vs threads” stacked‑bar figure.
+* Convert the logs to CSVs and plot a normalized “memory vs threads” stacked‑bar figure.
 
-Run a perf sweep (threads 1…N) across policies and plot throughput + perf counters.
+* Run a perf sweep (threads 1…N) across policies and plot throughput + perf counters.
 
-Tested on Ubuntu‑like systems. The example machine is a 4‑socket Intel Xeon E5‑4669 v4 (Broadwell‑EX), 22 cores per socket, 4 NUMA nodes (0–3), SMT disabled.
+All tests were made on Ubuntu‑like systems. The example machine is a 4‑socket Intel Xeon E5‑4669 v4 (Broadwell‑EX), 22 cores per socket, 4 NUMA nodes (0–3), SMT disabled.
 
 # 0) Prerequisites
 If you are running on an other system but the rack-mad-04 of TAU, you need to install prequisits: 

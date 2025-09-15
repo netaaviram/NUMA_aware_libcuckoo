@@ -34,21 +34,8 @@ unzip master.zip
 mv libcuckoo-master libcuckoo
 cd libcuckoo/tests/universal-benchmark
 ```
-# 2) Clone NUMA_aware_libcuckoo project (this repo):
-```bash
-wget https://github.com/netaaviram/NUMA_aware_libcuckoo/archive/refs/heads/main.zip -O numa_libcuckoo.zip
-unzip numa_libcuckoo.zip
-mv NUMA_aware_libcuckoo-main NUMA_aware_libcuckoo
-```
 
-3) Replace the original benchmark file with the NUMA optimized benchmark file from NUMA_aware_libcuckoo
-```bash
-rm universal_benchmark.cc
-mv ./NUMA_aware_libcuckoo/universal_benchmark.cc ./
-```
-* Now, the new optimized version of universal benchmark is saved as universal_benchmark.cc under libcuckoo/build/tests/universal_benchmark.cc
-
-# 3) Build and Compile libcuckoo
+# 2) Build libcuckoo
 ```bash
 g++ -std=c++17 -O3 -pthread \
   -I.. \
@@ -65,50 +52,14 @@ g++ -std=c++17 -O3 -pthread \
   -Wl,-rpath,"$HOME/numa_local/install/lib" \
   -lnuma
 ```
-We are using -lnuma flag to make sure linking against the NUMA library, which is required for memory placements. 
+# 3) Run a sweep over thread count to measure and obtain performance different memory placement configurations: 
+This step is the scalability profiling I ran to understand and detect bottlenecks in libcuckoo. We run a real workload (--total-ops != 0) while sweeping the thread count across sockets and record:
 
-# 4) Capture hardware & NUMA topology (one time)
+* the benchmark’s throughput (from its JSON)
 
-We record the CPU→NUMA mapping for later parsing:
-```bash
-lscpu > lscpu.txt
-numactl --hardware > numactl_hardware.txt
-```
-On the reference system:
-• 4 sockets × 22 cores = 88 cores (no SMT)
-• NUMA nodes 0–3
-• Node 0 CPUs: 0–10,44–54; Node 1: 11–21,55–65; Node 2: 22–32,66–76; Node 3: 33–43,77–87
+* Linux perf stat hardware counters (cycles, instructions, cache/branch stats)
 
-# 5) Run the 7 NUMA placement tests
-
-This step measures where memory pages are allocated and which NUMA node each thread runs on under different placement policies.
-We are not interested in throughput here, only in placement behavior.
-
-That’s why we run the benchmark with --total-ops 0:
-
-* The benchmark still allocates memory and spawns threads, but it doesn’t perform real operations, allowing us to capture a clean snapshot of memory/thread placement without workload noise.
-
-Run: 
-```bash
-mv ./NUMA_aware_libcuckoo/numactl_tests.sh ./
-chmod +x numactl_tests.sh
-./numactl_tests.sh
-```
-This will generate:
-numa_test_*.txt — parsed from /proc/$pid/numa_maps, showing memory pages per NUMA node.
-threadmap_*.txt — benchmark logs showing thread→CPU mapping.
-
-Later, parse_and_plot_numa.py processes these files to produce Figure 2 in the final report.
-
-# 6) Perf sweep (throughput + counters) and plot
-
-This step measures scalability. We run a real workload (larger --total-ops) while sweeping the thread count across sockets and record:
-
-* the benchmark’s throughput (from its JSON),
-
-* Linux perf stat hardware counters (cycles, instructions, cache/branch stats).
-
-* The result is a CSV you can plot to get Figure 1 in the final report (throughput vs. threads, with counters).
+* This produces the CSV and plot for Figure 1 in the final report (throughput vs. threads, with counters).
 
 Run the sweep:
 ```bash
@@ -135,7 +86,6 @@ C. For each run it executes:
     --reads 100 --initial-capacity 24 --prefill 100 \
     --total-ops $TOTAL_OPS --num-threads $T --seed $SEED
 ```
-
 perf stat wraps the run and outputs counters in CSV; the script extracts:
 
 * throughput from the benchmark JSON
@@ -143,3 +93,82 @@ perf stat wraps the run and outputs counters in CSV; the script extracts:
 * counters from perf lines
 
 * writes a single line to sweep.csv
+
+# 4) Clone NUMA_aware_libcuckoo project (this repo):
+```bash
+wget https://github.com/netaaviram/NUMA_aware_libcuckoo/archive/refs/heads/main.zip -O numa_libcuckoo.zip
+unzip numa_libcuckoo.zip
+mv NUMA_aware_libcuckoo-main NUMA_aware_libcuckoo
+```
+
+# 5) Replace the original benchmark file with the NUMA optimized benchmark file from NUMA_aware_libcuckoo
+```bash
+rm universal_benchmark.cc
+mv ./NUMA_aware_libcuckoo/universal_benchmark.cc ./
+```
+* Now, the new optimized version of universal benchmark is saved as universal_benchmark.cc under libcuckoo/build/tests/universal_benchmark.cc
+
+# 6) Build and Compile the optimized NUMA-aware libcuckoo implementation
+```bash
+g++ -std=c++17 -O3 -pthread \
+  -I.. \
+  -I../.. \
+  -I"$HOME/numa_local/install/include" \
+  -DLIBCUCKOO \
+  -DTABLE=LIBCUCKOO \
+  -DTABLE_TYPE=libcuckoo::cuckoohash_map \
+  -DKEY=uint64_t \
+  -DVALUE=uint64_t \
+  universal_benchmark.cc \
+  -o universal_benchmark \
+  -L"$HOME/numa_local/install/lib" \
+  -Wl,-rpath,"$HOME/numa_local/install/lib" \
+  -lnuma
+```
+We are using -lnuma flag to make sure linking against the NUMA library, which is required for memory placements. 
+
+# 7) Capture hardware & NUMA topology (one time)
+
+We record the CPU→NUMA mapping for later parsing:
+```bash
+lscpu > lscpu.txt
+numactl --hardware > numactl_hardware.txt
+```
+On the reference system:
+• 4 sockets × 22 cores = 88 cores (no SMT)
+• NUMA nodes 0–3
+• Node 0 CPUs: 0–10,44–54; Node 1: 11–21,55–65; Node 2: 22–32,66–76; Node 3: 33–43,77–87
+
+# 8) Run the 7 NUMA placement tests
+
+This step measures where memory pages are allocated and which NUMA node each thread runs on under different placement policies.
+We are not interested in throughput here, only in placement behavior.
+
+That’s why we run the benchmark with --total-ops 0:
+
+* The benchmark still allocates memory and spawns threads, but it doesn’t perform real operations, allowing us to capture a clean snapshot of memory/thread placement without workload noise.
+
+Run: 
+```bash
+mv ./NUMA_aware_libcuckoo/numactl_tests.sh ./
+chmod +x numactl_tests.sh
+./numactl_tests.sh
+```
+This will generate:
+numa_test_*.txt — parsed from /proc/$pid/numa_maps, showing memory pages per NUMA node.
+threadmap_*.txt — benchmark logs showing thread→CPU mapping.
+
+Later, parse_and_plot_numa.py processes these files to produce Figure 2 in the final report.
+
+# 9) Perf sweep (throughput + counters) and plot
+We now run the same experiment as for the original benchmark, but this time for comparison with the optimized libcuckoo benchmark:
+Run:
+```bash
+./bench_sweep.sh
+```
+You can than use:
+```bash
+python plot_sweep.py
+```
+To plot Figure 4 in the write-up.
+

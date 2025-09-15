@@ -55,14 +55,14 @@ g++ -std=c++17 -O3 -pthread \
 ```
 We are using -lnuma flag to make sure linking against the NUMA library, which is required for memory placements.
 
-# 3) Run a sweep over thread count to measure and obtain performance different memory placement configurations: 
-This step is the scalability profiling I ran to understand and detect bottlenecks in libcuckoo. We run a real workload (--total-ops != 0) while sweeping the thread count across sockets and record:
+# 3) Run a sweep over thread count: 
+This step is the scalability profiling I ran to understand and detect bottlenecks in libcuckoo. I ran a real workload (--total-ops != 0) while sweeping the thread count across sockets and record:
 
-* the benchmark’s throughput (from its JSON)
+* The benchmark’s throughput (from its JSON)
 
 * Linux perf stat hardware counters (cycles, instructions, cache/branch stats)
 
-* This produces the CSV and plot for Figure 1 in the final report (throughput vs. threads, with counters).
+This produces the CSV and plot for Figure 1 in the final report (throughput vs. threads, with counters).
 
 Run the sweep:
 ```bash

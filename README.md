@@ -70,7 +70,9 @@ chmod +x numactl_tests.sh
 ./numactl_tests.sh
 ```
 This will generate:
+
 numa_test_*.txt — parsed from /proc/$pid/numa_maps, showing memory pages per NUMA node.
+
 threadmap_*.txt — benchmark logs showing thread→CPU mapping.
 
 Later, parse_and_plot_numa.py processes these files to produce Figure 2 in the final report.

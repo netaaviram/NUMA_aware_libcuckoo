@@ -248,11 +248,13 @@ When building universal_benchmark, the -I and -L flags must point to these paths
 
 A2. Understanding --total-ops
 
-The benchmark takes a flag --total-ops that might look like a “fixed number of operations.” In practice it is just a work factor:
+We set the benchmark’s --total-ops so that each datapoint runs ~1–2 seconds on rack-mad-04. 
 
-The benchmark divides total-ops by the number of threads to decide how many operations each thread will execute.
+This runtime produced stable throughput and repeatability while keeping the sweep tractable. 
 
-It is not guaranteed that exactly that many ops will execute across the whole run; it’s just a target workload scale.
+Note that the program’s reported total_ops in the JSON reflects internal scaling (per thread/NUMA shard), so the actual executed operations are in the millions per point. 
+
+All configurations and thread counts used the same setting to ensure fair comparison.
 
 ---
 

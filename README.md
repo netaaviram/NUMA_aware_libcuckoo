@@ -1,6 +1,6 @@
 # NUMA-aware optimization of libcuckoo: analyzing scalability bottlenecks for improved performance through thread and memory placement
 
-This repo reproduces my experiments showing that the libcuckoo benchmark’s scalability is bottlenecked by NUMA‑unaware placement. I:
+This repo reproduces my experiments showing that the libcuckoo benchmark’s scalability is bottlenecked by NUMA-unaware placement. I:
 
 * Build libcuckoo’s universal_benchmark in Release mode.
 
@@ -8,11 +8,13 @@ This repo reproduces my experiments showing that the libcuckoo benchmark’s sca
 
 * Capture memory page placement (/proc/<pid>/numa_maps) and thread→CPU mapping (benchmark stdout).
 
-* Convert the logs to CSVs and plot a normalized “memory vs threads” stacked‑bar figure.
+* Convert the logs to CSVs and plot a normalized “memory vs threads” stacked-bar figure.
 
 * Run a perf sweep (threads 1…N) across policies and plot throughput + perf counters.
 
-All tests were made on Ubuntu‑like systems. The example machine is a 4‑socket Intel Xeon E5‑4669 v4 (Broadwell‑EX), 22 cores per socket, 4 NUMA nodes (0–3), SMT disabled.
+All tests were made on Ubuntu-like systems. The example machine is a 4-socket Intel Xeon E5-4669 v4 (Broadwell-EX), 22 cores per socket, 4 NUMA nodes (0–3), SMT disabled.
+
+---
 
 # 0) Prerequisites
 If you are running on an other system but the rack-mad-04 of TAU, you need to install prequisits: 
@@ -28,6 +30,8 @@ sudo apt-get install -y build-essential cmake numactl linux-tools-common linux-t
 python3 -m pip install --user pandas matplotlib
 ```
 
+---
+
 # 1) Clone libcuckoo
 ```bash
 wget https://github.com/efficient/libcuckoo/archive/refs/heads/master.zip
@@ -35,6 +39,8 @@ unzip master.zip
 mv libcuckoo-master libcuckoo
 cd libcuckoo/tests/universal-benchmark
 ```
+
+---
 
 # 2) Build libcuckoo
 ```bash
@@ -54,6 +60,8 @@ g++ -std=c++17 -O3 -pthread \
   -lnuma
 ```
 We are using -lnuma flag to make sure linking against the NUMA library, which is required for memory placements.
+
+---
 
 # 3) Run the 7 NUMA placement tests
 
@@ -76,6 +84,8 @@ numa_test_*.txt - parsed from /proc/$pid/numa_maps, showing memory pages per NUM
 threadmap_*.txt - benchmark logs showing thread→CPU mapping.
 
 Later, parse_and_plot_numa.py processes these files to produce Figure 2 in the final report.
+
+---
 
 # 4) Run a sweep over thread count: 
 This step is the scalability profiling I ran to understand and detect bottlenecks in libcuckoo. I ran a real workload (--total-ops != 0) while sweeping the thread count across sockets and record:
@@ -121,12 +131,17 @@ perf stat wraps the run and outputs counters in CSV; the script extracts:
 
 * writes a single line to sweep.csv
 
+---
+
 # 5) Clone NUMA_aware_libcuckoo project (this repo):
 ```bash
 wget https://github.com/netaaviram/NUMA_aware_libcuckoo/archive/refs/heads/main.zip -O numa_libcuckoo.zip
 unzip numa_libcuckoo.zip
 mv NUMA_aware_libcuckoo-main NUMA_aware_libcuckoo
 ```
+
+---
+
 # 6) Capture hardware & NUMA topology (one time)
 We record the CPU→NUMA mapping for later parsing:
 ```bash
@@ -138,6 +153,8 @@ On the reference system:
 • NUMA nodes 0–3
 • Node 0 CPUs: 0–10,44–54; Node 1: 11–21,55–65; Node 2: 22–32,66–76; Node 3: 33–43,77–87
 
+---
+
 # 7) Switching to NUMA aware implementation
 Replace the original benchmark file with the NUMA optimized benchmark file from NUMA_aware_libcuckoo:
 ```bash
@@ -145,6 +162,8 @@ rm universal_benchmark.cc
 mv ./NUMA_aware_libcuckoo/universal_benchmark.cc ./
 ```
 * Now, the new optimized version of universal benchmark is saved as universal_benchmark.cc under libcuckoo/build/tests/universal_benchmark.cc
+
+---
 
 # 8) Build and Compile the optimized NUMA-aware libcuckoo implementation
 ```bash
@@ -164,6 +183,8 @@ g++ -std=c++17 -O3 -pthread \
   -lnuma
 ```
 
+---
+
 # 9) Perf sweep (throughput + counters) and plot
 We now run the same experiment as for the original benchmark, but this time for comparison with the optimized libcuckoo benchmark.
 
@@ -177,6 +198,7 @@ python plot_sweep.py
 ```
 To plot Figure 4 in the write-up.
 
+---
 
 # Appendix
 
@@ -222,6 +244,8 @@ Library: $HOME/numa_local/install/lib/libnuma.so
 
 When building universal_benchmark, the -I and -L flags must point to these paths, and you must link with -lnuma.
 
+---
+
 A2. Understanding --total-ops
 
 The benchmark takes a flag --total-ops that might look like a “fixed number of operations.” In practice it is just a work factor:
@@ -229,6 +253,8 @@ The benchmark takes a flag --total-ops that might look like a “fixed number of
 The benchmark divides total-ops by the number of threads to decide how many operations each thread will execute.
 
 It is not guaranteed that exactly that many ops will execute across the whole run; it’s just a target workload scale.
+
+---
 
 A3. Perf Counter Collection
 
@@ -241,6 +267,8 @@ We use Linux perf stat in CSV mode around each benchmark run to capture hardware
 * The script extracts counters like cycles, instructions, cache_references, cache_misses, branches, branch_misses.
 
 * For deeper analysis, you can extend it to include memory bandwidth counters (e.g. uncore_imc) if supported by your CPU.
+
+---
 
 A4. Placement Policies in bench_sweep.sh
 
@@ -256,12 +284,15 @@ For clarity, the CONFIGS array in the sweep script defines several policies:
 
 This variety shows exactly how sensitive libcuckoo is to NUMA awareness.
 
+---
+
 A5. Runtime Expectations
 
 * NUMA placement tests (numactl_tests.sh) run quickly (seconds per config).
 
 * Perf sweeps (bench_sweep.sh) are much heavier: for 7 configs × ~44 thread counts, expect hours of runtime on a 4-socket 88-core system. Plan accordingly.
 
+---
 
 A6. What the NUMA debug prints mean (optimized benchmark)
 

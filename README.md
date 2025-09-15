@@ -95,6 +95,8 @@ chmod +x bench_sweep.sh
 This creates a sweep.csv with the following columns:
 config,threads,throughput,cycles,instructions,cache_references,cache_misses,branches,branch_misses
 
+* NOTE: This test runs 44 different thread counts (1,3,5,7,...,87) for each of the configurations. You should expect long runtime (few hours).
+
 Then plot using:
 ```bash
 python plot_sweep.py

@@ -1,4 +1,6 @@
-# NUMA-aware optimization of libcuckoo: analyzing scalability bottlenecks for improved performance through thread and memory placement
+# NUMA-aware optimization of libcuckoo: 
+
+### Analyzing scalability bottlenecks for improved performance through thread and memory placement
 
 This repo reproduces my experiments showing that the libcuckoo benchmark’s scalability is bottlenecked by NUMA-unaware placement. I:
 

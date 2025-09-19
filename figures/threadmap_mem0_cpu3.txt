@@ -1,0 +1,61 @@
+Detected 4 NUMA nodes
+NUMA node 0 has 10485760 keys
+NUMA node 1 has 10485760 keys
+NUMA node 2 has 10485760 keys
+NUMA node 3 has 10485760 keys
+Pre-filling table shards
+[prefill n0 t0] cpu=0
+[prefill n0 t2] cpu=1
+[prefill n0 t1] cpu=44
+[prefill n0 t3] cpu=0
+[prefill n1 t0] cpu=55
+[prefill n0 t4] cpu=8
+[prefill n1 t1] cpu=21
+[prefill n1 t4] cpu=12
+[prefill n1 t3] cpu=11
+[prefill n1 t2] cpu=13
+[prefill n2 t0] cpu=22
+[prefill n2 t3] cpu=66
+[prefill n2 t1] cpu=23
+[prefill n2 t2] cpu=29
+[prefill n3 t0] cpu=85
+[prefill n2 t4] cpu=23
+[prefill n3 t1] cpu=86
+[prefill n3 t2] cpu=87
+[prefill n3 t4] cpu=83
+[prefill n3 t3] cpu=80
+Running operations
+[mix    n0 t1] cpu=44
+[mix    n0 t0] cpu=45
+[mix    n0 t3] cpu=49
+[mix    n1 t0] cpu=55
+[mix    n0 t4] cpu=0
+[mix    n1 t4] cpu=56
+[mix    n2 t0] cpu=66
+[mix    n1 t1] cpu=57
+[mix    n1 t2] cpu=15
+[mix    n2 t1] cpu=22
+[mix    n2 t3] cpu=66
+[mix    n0 t2] cpu=1
+[mix    n3 t0] cpu=83
+[mix    n1 t3] cpu=58
+[mix    n3 t2] cpu=80
+[mix    n3 t1] cpu=79
+[mix    n3 t3] cpu=82
+[mix    n3 t4] cpu=85
+[mix    n2 t2] cpu=66
+[mix    n2 t4] cpu=66
+{
+    "args": "--reads 100 --inserts 0 --erases 0 --updates 0 --upserts 0 --initial-capacity 24 --prefill 100 --total-ops 75 --num-threads 20 --seed 379485113 --numa-nodes 4",
+    "key": "uint64_t",
+    "key_size": "8",
+    "value": "uint64_t",
+    "value_size": "8",
+    "NUMA_table": "LIBCUCKOO",
+    "output": {
+        "total_ops": {"name": "Total Operations", "units": "count", "value": 12582912},
+        "time_elapsed": {"name": "Time Elapsed", "units": "seconds", "value": 0.2595},
+        "throughput": {"name": "Throughput", "units": "count/seconds", "value": 48488758.2635},
+        "memory_samples": {"name": "Memory Samples", "units": "[bytes]", "value": []}
+    }
+}

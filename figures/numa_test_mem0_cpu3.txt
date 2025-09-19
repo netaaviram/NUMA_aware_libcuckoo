@@ -1,0 +1,22 @@
+mem0_cpu3
+636e89ceb000 bind:0 file=/vol/scratch/netaaviram/libcuckoo/tests/universal-benchmark/universal_benchmark anon=1 dirty=1 active=0 N0=1 kernelpagesize_kB=4
+636e89cec000 bind:0 file=/vol/scratch/netaaviram/libcuckoo/tests/universal-benchmark/universal_benchmark anon=1 dirty=1 active=0 N0=1 kernelpagesize_kB=4
+636e8a520000 bind:0 heap anon=5 dirty=5 active=0 N0=5 kernelpagesize_kB=4
+7703a4e00000 bind:0 anon=36030 dirty=36030 active=12 N0=36030 kernelpagesize_kB=4
+7703b9216000 bind:0 file=/usr/lib/x86_64-linux-gnu/libc.so.6 anon=4 dirty=4 active=0 N0=4 kernelpagesize_kB=4
+7703b921a000 bind:0 file=/usr/lib/x86_64-linux-gnu/libc.so.6 anon=2 dirty=2 active=0 N0=2 kernelpagesize_kB=4
+7703b921c000 bind:0 anon=5 dirty=5 active=0 N0=5 kernelpagesize_kB=4
+7703b93fe000 bind:0 file=/usr/lib/x86_64-linux-gnu/libgcc_s.so.1 anon=1 dirty=1 active=0 N0=1 kernelpagesize_kB=4
+7703b93ff000 bind:0 file=/usr/lib/x86_64-linux-gnu/libgcc_s.so.1 anon=1 dirty=1 active=0 N0=1 kernelpagesize_kB=4
+7703b961b000 bind:0 file=/usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.30 anon=11 dirty=11 active=0 N0=11 kernelpagesize_kB=4
+7703b9626000 bind:0 file=/usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.30 anon=3 dirty=3 active=0 N0=3 kernelpagesize_kB=4
+7703b9629000 bind:0 anon=3 dirty=3 active=0 N0=3 kernelpagesize_kB=4
+7703b963c000 bind:0 anon=5 dirty=5 active=0 N0=5 kernelpagesize_kB=4
+7703b9726000 bind:0 file=/usr/lib/x86_64-linux-gnu/libm.so.6 anon=1 dirty=1 active=0 N0=1 kernelpagesize_kB=4
+7703b9727000 bind:0 file=/usr/lib/x86_64-linux-gnu/libm.so.6 anon=1 dirty=1 active=0 N0=1 kernelpagesize_kB=4
+7703b9745000 bind:0 file=/specific/a/home/cc/students/csguests/netaaviram/numa_local/install/lib/libnuma.so.1.0.0 anon=1 dirty=1 active=0 N0=1 kernelpagesize_kB=4
+7703b9746000 bind:0 file=/specific/a/home/cc/students/csguests/netaaviram/numa_local/install/lib/libnuma.so.1.0.0 anon=1 dirty=1 active=0 N0=1 kernelpagesize_kB=4
+7703b9747000 bind:0 anon=2 dirty=2 active=0 N0=2 kernelpagesize_kB=4
+7703b9781000 bind:0 file=/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2 anon=2 dirty=2 active=0 N0=2 kernelpagesize_kB=4
+7703b9783000 bind:0 file=/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2 anon=2 dirty=2 active=0 N0=2 kernelpagesize_kB=4
+7ffebfdee000 bind:0 stack anon=6 dirty=6 active=0 N0=6 kernelpagesize_kB=4

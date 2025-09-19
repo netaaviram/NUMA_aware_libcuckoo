@@ -300,7 +300,7 @@ A6. What the NUMA debug prints mean (optimized benchmark)
 
 I added a few stderr debug prints to the optimized universal_benchmark to make NUMA behavior visible and easy to validate. They appear before the JSON (which stays on stdout so scripts can parse it cleanly). You can always capture them separately via 2> debug.log.
 
-Sample output (stderr):
+### Sample output (stderr):
 
 ```bash
 Detected 4 NUMA nodes

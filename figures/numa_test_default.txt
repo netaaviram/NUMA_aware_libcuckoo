@@ -1,0 +1,22 @@
+default
+643da5081000 default file=/vol/scratch/netaaviram/libcuckoo/tests/universal-benchmark/universal_benchmark anon=1 dirty=1 active=0 N2=1 kernelpagesize_kB=4
+643da5082000 default file=/vol/scratch/netaaviram/libcuckoo/tests/universal-benchmark/universal_benchmark anon=1 dirty=1 active=0 N2=1 kernelpagesize_kB=4
+643da548f000 default heap anon=5 dirty=5 active=0 N2=5 kernelpagesize_kB=4
+7d7df7200000 default anon=57378 dirty=57378 active=0 N2=57378 kernelpagesize_kB=4
+7d7e0b616000 default file=/usr/lib/x86_64-linux-gnu/libc.so.6 anon=4 dirty=4 active=0 N2=4 kernelpagesize_kB=4
+7d7e0b61a000 default file=/usr/lib/x86_64-linux-gnu/libc.so.6 anon=2 dirty=2 active=0 N2=2 kernelpagesize_kB=4
+7d7e0b61c000 default anon=5 dirty=5 active=0 N2=5 kernelpagesize_kB=4
+7d7e0b7fe000 default file=/usr/lib/x86_64-linux-gnu/libm.so.6 anon=1 dirty=1 active=0 N2=1 kernelpagesize_kB=4
+7d7e0b7ff000 default file=/usr/lib/x86_64-linux-gnu/libm.so.6 anon=1 dirty=1 active=0 N2=1 kernelpagesize_kB=4
+7d7e0ba1b000 default file=/usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.30 anon=11 dirty=11 active=0 N2=11 kernelpagesize_kB=4
+7d7e0ba26000 default file=/usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.30 anon=3 dirty=3 active=0 N2=3 kernelpagesize_kB=4
+7d7e0ba29000 default anon=3 dirty=3 active=0 N2=3 kernelpagesize_kB=4
+7d7e0ba73000 default anon=5 dirty=5 active=0 N2=5 kernelpagesize_kB=4
+7d7e0ba96000 default file=/usr/lib/x86_64-linux-gnu/libgcc_s.so.1 anon=1 dirty=1 active=0 N2=1 kernelpagesize_kB=4
+7d7e0ba97000 default file=/usr/lib/x86_64-linux-gnu/libgcc_s.so.1 anon=1 dirty=1 active=0 N2=1 kernelpagesize_kB=4
+7d7e0bab5000 default file=/specific/a/home/cc/students/csguests/netaaviram/numa_local/install/lib/libnuma.so.1.0.0 anon=1 dirty=1 active=0 N2=1 kernelpagesize_kB=4
+7d7e0bab6000 default file=/specific/a/home/cc/students/csguests/netaaviram/numa_local/install/lib/libnuma.so.1.0.0 anon=1 dirty=1 active=0 N2=1 kernelpagesize_kB=4
+7d7e0bab7000 default anon=2 dirty=2 active=0 N2=2 kernelpagesize_kB=4
+7d7e0baf1000 default file=/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2 anon=2 dirty=2 active=0 N2=2 kernelpagesize_kB=4
+7d7e0baf3000 default file=/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2 anon=2 dirty=2 active=0 N2=2 kernelpagesize_kB=4
+7ffc7d0e7000 default stack anon=6 dirty=6 active=0 N2=6 kernelpagesize_kB=4

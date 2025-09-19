@@ -202,7 +202,7 @@ To plot Figure 4 in the write-up.
 
 # Appendix
 
-A1. Building and Installing libnuma Locally
+### A1. Building and Installing libnuma Locally
 
 The experiments rely on explicit NUMA memory placement via the libnuma library. Many systems ship with libnuma preinstalled, but to avoid version mismatches we build it from source in a local prefix ($HOME/numa_local).
 
@@ -246,7 +246,7 @@ When building universal_benchmark, the -I and -L flags must point to these paths
 
 ---
 
-A2. Understanding --total-ops
+### A2. Understanding --total-ops
 
 We set the benchmark’s --total-ops so that each datapoint runs ~1–2 seconds on rack-mad-04. 
 
@@ -258,7 +258,7 @@ All configurations and thread counts used the same setting to ensure fair compar
 
 ---
 
-A3. Perf Counter Collection
+### A3. Perf Counter Collection
 
 We use Linux perf stat in CSV mode around each benchmark run to capture hardware counters. Important notes:
 
@@ -272,7 +272,7 @@ We use Linux perf stat in CSV mode around each benchmark run to capture hardware
 
 ---
 
-A4. Placement Policies in bench_sweep.sh
+### A4. Placement Policies in bench_sweep.sh
 
 For clarity, the CONFIGS array in the sweep script defines several policies:
 
@@ -288,7 +288,7 @@ This variety shows exactly how sensitive libcuckoo is to NUMA awareness.
 
 ---
 
-A5. Runtime Expectations
+### A5. Runtime Expectations
 
 * NUMA placement tests (numactl_tests.sh) run quickly (seconds per config).
 
@@ -296,7 +296,7 @@ A5. Runtime Expectations
 
 ---
 
-A6. What the NUMA debug prints mean (optimized benchmark)
+### A6. What the NUMA debug prints mean (optimized benchmark)
 
 I added a few stderr debug prints to the optimized universal_benchmark to make NUMA behavior visible and easy to validate. They appear before the JSON (which stays on stdout so scripts can parse it cleanly). You can always capture them separately via 2> debug.log.
 
